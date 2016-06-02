@@ -99,6 +99,7 @@ extern "C" {
 #include <syscall.h>
 #include <unistd.h>
 #include <linux/unistd.h>
+#include <linux/sched.h>
 #include <endian.h>
 
 #ifdef __mips__
