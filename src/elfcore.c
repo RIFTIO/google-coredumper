@@ -62,8 +62,8 @@ extern "C" {
 
 #define UNW_LOCAL_ONLY
 #include <libunwind.h>
-#include "python3.3m/Python.h"
-#include "python3.3m/frameobject.h"
+#include "Python.h"
+#include "frameobject.h"
 
 #if 0
 #ifdef NDEBUG
@@ -867,7 +867,7 @@ static int RwPyWalkAndMark(regs *regs, fpregs *fpregs, fpxregs *fpxregs,
   /* Check for Python frames vaguely near the top of stack */
   while (depth++ < 16 && unw_step(&cursor) > 0) {
     if (unw_get_proc_name(&cursor, name, sizeof(name), &off) != 0) {
-      return;
+      return 0;
     }
 
     DBG("unw step %d name='%s'\n", depth, name);
@@ -892,7 +892,6 @@ static int RwPyWalkAndMark(regs *regs, fpregs *fpregs, fpxregs *fpxregs,
 	AddrValidPreserve(frame->f_builtins, 0, TRUE, mappings, num_mappings);
 	AddrValidPreserve(frame->f_globals, 0, TRUE, mappings, num_mappings);
 	AddrValidPreserve(frame->f_locals, 0, TRUE, mappings, num_mappings);
-	AddrValidPreserve(frame->f_tstate, 0, TRUE, mappings, num_mappings);
 	AddrValidPreserve(frame->f_exc_type, 0, TRUE, mappings, num_mappings);
 	AddrValidPreserve(frame->f_exc_value, 0, TRUE, mappings, num_mappings);
 	AddrValidPreserve(frame->f_exc_traceback, 0, TRUE, mappings, num_mappings);
@@ -1267,70 +1266,6 @@ static int CreateElfCore(void *handle,
                  }
                }
             }
-#if 0
-            /* Walk stacks and look for python interpreter function
-               calls so as to preserve interpreter state at each
-               interesting point. */
-            {
-              int t;
-              for (t = num_threads; t-- > 0; ) {
-                // x86_64 specific :(
-                uint64_t rsp = regs[t].rsp;
-                uint64_t rip = regs[t].rip;
-                
-                extern void PyEval_EvalFrameEx(void);
-                void *foo = &PyEval_EvalFrameEx;
-                if (rip) {
-                  void *val = (void *)rip;
-                  if (val && val >= foo && val < foo + 32000) { // approximate size of PyEval_EvalFrameEx from gdb disassembly
-                    DBG("thread %d rip location 0x%08Lx contains %p, within PyEval_EvalFrameEx@%p\n",
-                        t,
-                        rip,
-                        val,
-                        foo);
-                    goto nx_stk;
-                  }
-                }
-                int stkoff = 0;
-                for (stkoff=0; stkoff<327680; stkoff++) {
-                  uint64_t stkaddr = rsp + sizeof(void*) * stkoff;
-                  if ((!(stkaddr & 0x7))) {
-                    for (i = 0; i < num_mappings; i++) {
-                      if (mappings[i].write_size
-                          && mappings[i].start_address <= stkaddr
-                          && stkaddr+8 < mappings[i].end_address) {
-                        void *val = *((void **)stkaddr);
-                        if (val && val >= foo && val < foo + 32000) {
-                          DBG("thread %d stack rsp location 0x%08Lx offset [%d]=0x%Lx contains %p, within PyEval_EvalFrameEx@%p off +%d\n",
-                              t,
-                              rsp,
-                              stkoff,
-                              stkaddr,
-                              val,
-                              foo,
-                              (int)(((uint64_t)val) - (uint64_t)foo));
-                          /* And, now what?  We should look at the
-                             on-stack data beneath this (assumed)
-                             return addr for pointers to structs which
-                             contain the string which gdb shows as the
-                             Python function/file name.  There will be
-                             much heuristic guessing about what value
-                             on the stack that actually is.  The
-                             mapping with that struct and the mapping
-                             with that string should be marked
-                             preserve.  Hopefully that is enough */
-                          goto nx_stk;
-                        }
-                      }
-                    }
-                  }
-                nx_stk:
-                  ;
-                }
-              }
-            }
-
-#endif // #if0
 
             /* Identify mappings to preserve */
             for (i = 0; i < num_mappings; i++) {

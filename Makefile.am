@@ -4,7 +4,7 @@
 ACLOCAL_AMFLAGS = -I `pwd`/../autoconf
 
 # This is so we can #include <google/foo>
-AM_CPPFLAGS = -I$(top_srcdir)/src
+AM_CPPFLAGS = -I$(top_srcdir)/src `pkg-config --cflags python3`
 
 googleincludedir = $(includedir)/google
 ## The .h files you want to install (that is, .h files that people
@@ -79,7 +79,7 @@ libcoredumper_la_LDFLAGS = -export-symbols $(top_srcdir)/src/libcoredumper.sym \
 TESTS += coredumper_unittest linux_syscall_support_unittest
 COREDUMP_UNITTEST_INCLUDES = src/google/coredumper.h
 coredumper_unittest_SOURCES = src/coredumper_unittest.c
-coredumper_unittest_LDADD = libcoredumper.la -lunwind -lpython3 -lpthread
+coredumper_unittest_LDADD = libcoredumper.la -lunwind  -lpthread `pkg-config --libs python3`
 LINUX_SYSCALL_SUPPORT_INCLUDES = src/linux_syscall_support.h
 linux_syscall_support_unittest_SOURCES = src/linux_syscall_support_unittest.cc
 

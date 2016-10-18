@@ -50,8 +50,8 @@
 #define UNW_LOCAL_ONLY
 #include <libunwind.h>
 #define MAX_STACK_DEPTH 1024
-#include "python3.3m/Python.h"
-#include "python3.3m/frameobject.h"
+#include "Python.h"
+#include "frameobject.h"
 
 static const char *const no_args_bzip2[]    = { "bzip2",    NULL };
 static const char *const no_args_gzip[]     = { "gzip",     NULL };
@@ -258,7 +258,6 @@ void RwRecordPyStack()
           g_debug_py_frame[pydepth++] = (void*) frame->f_builtins;   /* builtin symbol table (PyDictObject) */
           g_debug_py_frame[pydepth++] = (void*) frame->f_globals;    /* global symbol table (PyDictObject) */
           g_debug_py_frame[pydepth++] = (void*) frame->f_locals;     /* local symbol table (any mapping) */
-          g_debug_py_frame[pydepth++] = (void*) frame->f_tstate;     /* State */
           g_debug_py_frame[pydepth++] = (void*) frame->f_exc_type;
           g_debug_py_frame[pydepth++] = (void*) frame->f_exc_value;
           g_debug_py_frame[pydepth++] = (void*) frame->f_exc_traceback;
