@@ -443,7 +443,7 @@ static ssize_t LimitWriter(void *f, const void *void_buf, size_t bytes) {
   if (rc > 0) {
     fds->max_length -= rc;
   }
-  return rc;
+  return (rc == -1 && errno == EFAULT)? bytes: rc;
 }
 
 
