@@ -231,17 +231,17 @@ target_alias = @target_alias@
 ACLOCAL_AMFLAGS = -I `pwd`/../autoconf
 
 # This is so we can #include <google/foo>
-AM_CPPFLAGS = -I$(top_srcdir)/src `pkg-config --cflags python3`
+AM_CPPFLAGS = -I$(top_srcdir)/src `pkg-config --cflags python3-embed`
 googleincludedir = $(includedir)/google
 googleinclude_HEADERS = src/google/coredumper.h
 docdir = $(prefix)/share/doc/$(PACKAGE)-$(VERSION)
 dist_doc_DATA = AUTHORS COPYING ChangeLog INSTALL NEWS README TODO
 lib_LTLIBRARIES = libcoredumper.la
 TESTS = coredumper_unittest linux_syscall_support_unittest
-check_SCRIPTS = 
-TESTS_ENVIRONMENT = 
+check_SCRIPTS =
+TESTS_ENVIRONMENT =
 # Every time you add a unittest to check_SCRIPTS, add it here too
-noinst_SCRIPTS = 
+noinst_SCRIPTS =
 
 # The manual pages that should be installed
 man3_MANS = man/GetCoreDump.man man/WriteCoreDump.man \
@@ -262,7 +262,7 @@ libcoredumper_la_LDFLAGS = -export-symbols $(top_srcdir)/src/libcoredumper.sym \
 
 COREDUMP_UNITTEST_INCLUDES = src/google/coredumper.h
 coredumper_unittest_SOURCES = src/coredumper_unittest.c
-coredumper_unittest_LDADD = libcoredumper.la -lunwind -lpthread `pkg-config --libs python3`
+coredumper_unittest_LDADD = libcoredumper.la -lunwind -lpthread `pkg-config --libs python3-embed`
 LINUX_SYSCALL_SUPPORT_INCLUDES = src/linux_syscall_support.h
 linux_syscall_support_unittest_SOURCES = src/linux_syscall_support_unittest.cc
 EXTRA_DIST = ${man3_MANS} man/GetCoreDump.man man/WriteCoreDump.man \
@@ -318,7 +318,7 @@ src/config.h: src/stamp-h1
 src/stamp-h1: $(top_srcdir)/src/config.h.in $(top_builddir)/config.status
 	@rm -f src/stamp-h1
 	cd $(top_builddir) && $(SHELL) ./config.status src/config.h
-$(top_srcdir)/src/config.h.in:  $(am__configure_deps) 
+$(top_srcdir)/src/config.h.in:  $(am__configure_deps)
 	cd $(top_srcdir) && $(AUTOHEADER)
 	rm -f src/stamp-h1
 	touch $@
@@ -352,7 +352,7 @@ clean-libLTLIBRARIES:
 	  echo "rm -f \"$${dir}/so_locations\""; \
 	  rm -f "$${dir}/so_locations"; \
 	done
-libcoredumper.la: $(libcoredumper_la_OBJECTS) $(libcoredumper_la_DEPENDENCIES) 
+libcoredumper.la: $(libcoredumper_la_OBJECTS) $(libcoredumper_la_DEPENDENCIES)
 	$(LINK) -rpath $(libdir) $(libcoredumper_la_LDFLAGS) $(libcoredumper_la_OBJECTS) $(libcoredumper_la_LIBADD) $(LIBS)
 
 clean-noinstPROGRAMS:
@@ -361,10 +361,10 @@ clean-noinstPROGRAMS:
 	  echo " rm -f $$p $$f"; \
 	  rm -f $$p $$f ; \
 	done
-coredumper_unittest$(EXEEXT): $(coredumper_unittest_OBJECTS) $(coredumper_unittest_DEPENDENCIES) 
+coredumper_unittest$(EXEEXT): $(coredumper_unittest_OBJECTS) $(coredumper_unittest_DEPENDENCIES)
 	@rm -f coredumper_unittest$(EXEEXT)
 	$(LINK) $(coredumper_unittest_LDFLAGS) $(coredumper_unittest_OBJECTS) $(coredumper_unittest_LDADD) $(LIBS)
-linux_syscall_support_unittest$(EXEEXT): $(linux_syscall_support_unittest_OBJECTS) $(linux_syscall_support_unittest_DEPENDENCIES) 
+linux_syscall_support_unittest$(EXEEXT): $(linux_syscall_support_unittest_OBJECTS) $(linux_syscall_support_unittest_DEPENDENCIES)
 	@rm -f linux_syscall_support_unittest$(EXEEXT)
 	$(CXXLINK) $(linux_syscall_support_unittest_LDFLAGS) $(linux_syscall_support_unittest_OBJECTS) $(linux_syscall_support_unittest_LDADD) $(LIBS)
 

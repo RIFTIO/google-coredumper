@@ -48,7 +48,11 @@ extern "C" {
 #include <sys/poll.h>
 #include <sys/prctl.h>
 #include <sys/socket.h>
-#include <sys/sysctl.h>
+
+#ifdef HAVE_SYS_SYSCTL_H
+#include <sys/sysctl.h>  /* sys/sysctl.h removed in ubuntu22.06 libc */
+#endif
+
 #include <sys/time.h>
 #include <sys/uio.h>
 #include <sys/wait.h>
@@ -435,7 +439,7 @@ static ssize_t LimitWriter(void *f, const void *void_buf, size_t bytes) {
   ssize_t rc;
   /* Assume that the mapping preservation logic limited our size
      reasonably; merely truncating more or less always emits unusable
-     core files. */ 
+     core files. */
   //  if (bytes > fds->max_length) {
   //  bytes = fds->max_length;
   //  }
@@ -881,28 +885,21 @@ static int RwPyWalkAndMark(regs *regs, fpregs *fpregs, fpxregs *fpxregs,
       DBG("    py frame at bp=%p\n", (void*)bp);
 
       for (pydepth = 0, frame = (PyFrameObject*)bp;
-	   frame && (pydepth < MAX_PYDEPTH);
-	   pydepth++, frame = frame->f_back) {
-	if (!AddrValidPreserve(frame, sizeof(PyFrameObject), TRUE, mappings, num_mappings)) {
-	  DBG("    py frame dud\n");
-	  break;
-	}
-	DBG("    py frame ok, marking frame and contents for pyframe=%d\n", pyframes);
-	AddrValidPreserve(frame->f_code, 0, TRUE, mappings, num_mappings);    // func/filename can be found through this PyCodeObject
-	AddrValidPreserve(frame->f_builtins, 0, TRUE, mappings, num_mappings);
-	AddrValidPreserve(frame->f_globals, 0, TRUE, mappings, num_mappings);
-	AddrValidPreserve(frame->f_locals, 0, TRUE, mappings, num_mappings);
-	AddrValidPreserve(frame->f_exc_type, 0, TRUE, mappings, num_mappings);
-	AddrValidPreserve(frame->f_exc_value, 0, TRUE, mappings, num_mappings);
-	AddrValidPreserve(frame->f_exc_traceback, 0, TRUE, mappings, num_mappings);
-	AddrValidPreserve(frame->f_trace, 0, TRUE, mappings, num_mappings);
+          frame && (pydepth < MAX_PYDEPTH);
+          pydepth++, frame = PyFrame_GetBack(frame)) {
+        if (!AddrValidPreserve(frame, sizeof(PyFrameObject), TRUE, mappings, num_mappings)) {
+          DBG("    py frame dud\n");
+          break;
+        }
+        DBG("    py frame ok, marking frame and contents for pyframe=%d\n", pyframes);
+        AddrValidPreserve(PyFrame_GetCode(frame), 0, TRUE, mappings, num_mappings);    // func/filename can be found through this PyCodeObject
 
-	pyframes++;
+        pyframes++;
       }
       goto out;
     }
   }
-  
+
  out:
   return pyframes;
 }
@@ -1345,7 +1342,7 @@ static int CreateElfCore(void *handle,
                 uint64_t rbp=regs[t].BP;
 
                 /* Sometimes we're getting a ucontext with stack pointer that lost the upper bits, "borrow" them from base pointer. */
-                if (! (rsp & 0xffffffff00000000)) { 
+                if (! (rsp & 0xffffffff00000000)) {
                   //                  regs[t].rsp |= (rbp & 0xffffffff00000000);
                 }
 

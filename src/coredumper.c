@@ -46,7 +46,7 @@
 #include "linux_syscall_support.h"
 #include "linuxthreads.h"
 #include "thread_lister.h"
- 
+
 #define UNW_LOCAL_ONLY
 #include <libunwind.h>
 #define MAX_STACK_DEPTH 1024
@@ -254,16 +254,17 @@ void RwRecordPyStack()
         frame = (PyFrameObject*)bp;
         while (frame && (pydepth < loopcnt-10)) {
           g_debug_py_frame[pydepth++] = (void*) frame;        /* frame pointer */
-          g_debug_py_frame[pydepth++] = (void*) frame->f_code;       /* code segment */
-          g_debug_py_frame[pydepth++] = (void*) frame->f_builtins;   /* builtin symbol table (PyDictObject) */
-          g_debug_py_frame[pydepth++] = (void*) frame->f_globals;    /* global symbol table (PyDictObject) */
-          g_debug_py_frame[pydepth++] = (void*) frame->f_locals;     /* local symbol table (any mapping) */
-          g_debug_py_frame[pydepth++] = (void*) frame->f_exc_type;
-          g_debug_py_frame[pydepth++] = (void*) frame->f_exc_value;
-          g_debug_py_frame[pydepth++] = (void*) frame->f_exc_traceback;
-          g_debug_py_frame[pydepth++] = (void*) frame->f_trace;
+          g_debug_py_frame[pydepth++] = (void*) PyFrame_GetCode(frame);       /* code segment */
+          // Python3.9 onwards the PyFrameObject cannot access its memebr directly
+          // g_debug_py_frame[pydepth++] = (void*) PyFrame_GetBuiltins(frame);   /* builtin symbol table (PyDictObject) */
+          // g_debug_py_frame[pydepth++] = (void*) PyFrame_GetGlobals(frame);    /* global symbol table (PyDictObject) */
+          // g_debug_py_frame[pydepth++] = (void*) PyFrame_GetLocals(frame);     /* local symbol table (any mapping) */
+          // g_debug_py_frame[pydepth++] = (void*) frame->f_exc_type;
+          // g_debug_py_frame[pydepth++] = (void*) frame->f_exc_value;
+          // g_debug_py_frame[pydepth++] = (void*) frame->f_exc_traceback;
+          // g_debug_py_frame[pydepth++] = (void*) frame->f_trace;
 
-          frame = frame->f_back;
+          frame = PyFrame_GetBack(frame);
           pydepth++;
         }
         g_debug_py_sz = pydepth;
